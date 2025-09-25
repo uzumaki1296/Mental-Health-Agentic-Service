@@ -1,69 +1,68 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Sample SAM app with PostgreSQL, DynamoDB, TypeScript & Python Lambdas.
+Description: >
+  Student Stress Detector - Serverless ML-powered system to flag high-stress students
+  and expose alerts through API Gateway. Challenge 2 implementation.
 
 Globals:
   Function:
     Timeout: 10
+    MemorySize: 256
 
 Resources:
 
+  ## DynamoDB Table
   UserTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: UserEvents
-      BillingMode: PAYPERREQUEST
+      TableName: HighStressUsers
+      BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: userId
           AttributeType: S
       KeySchema:
         - AttributeName: userId
           KeyType: HASH
-      StreamSpecification:
-        StreamViewType: NEW_IMAGE
 
-  TSLambda:
+  ## Python Lambda - Process dataset and store alerts
+  StressDetectorLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: py-lambda/
+      Handler: stress_detector.lambda_handler
+      Runtime: python3.11
+      Environment:
+        Variables:
+          DDB_TABLE: !Ref UserTable
+      Events:
+        ProcessStressApi:
+          Type: Api
+          Properties:
+            Path: /process-stress
+            Method: post
+
+  ## TypeScript Lambda - Fetch alerts from DynamoDB
+  GetAlertsLambda:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ts-lambda/
       Handler: dist/app.handler
       Runtime: nodejs18.x
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            Path: /user
-            Method: post
       Environment:
         Variables:
-          PGHOST: "host.docker.internal"
-          PGUSER: "postgres"
-          PGPASSWORD: "example"
-          PGDATABASE: "users"
-          PGPORT: "5432"
-
-  PyLambda:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: py-lambda/
-      Handler: app.lambda_handler
-      Runtime: python3.11
+          DDB_TABLE: !Ref UserTable
       Events:
-        Api:
+        GetAlertsApi:
           Type: Api
           Properties:
-            Path: /user-python
-            Method: post
-      Environment:
-        Variables:
-          PGHOST: "host.docker.internal"
-          PGUSER: "postgres"
-          PGPASSWORD: "example"
-          PGDATABASE: "users"
-          PGPORT: "5432"
+            Path: /alerts
+            Method: get
 
 Outputs:
-  ApiUrl:
-    Description: "API Gateway endpoint"
-    Value:
-      Fn::Sub: "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/user"
+  StressDetectorApi:
+    Description: "Endpoint to process dataset and store stress alerts"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/process-stress"
+
+  GetAlertsApi:
+    Description: "Endpoint to fetch stress alerts"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/alerts"

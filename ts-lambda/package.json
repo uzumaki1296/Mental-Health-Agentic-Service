@@ -1,17 +1,20 @@
 {
   "name": "ts-lambda",
   "version": "1.0.0",
-  "description": "A simple AWS Lambda function written in TypeScript that connects to a PostgreSQL database.",
-
-  "main": "app.js",
-  "type": "commonjs",
+  "description": "Lambda function to fetch alerts from DynamoDB",
+  "main": "dist/app.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node app.ts"
+  },
   "dependencies": {
-    "pg": "^8.16.0"
+    "@aws-sdk/client-dynamodb": "^3.637.0",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.92",
-    "@types/node": "^22.15.21",
-    "@types/pg": "^8.15.2",
-    "typescript": "^5.8.3"
+    "@types/node": "^20.11.30",
+    "typescript": "^5.4.5",
+    "ts-node": "^10.9.2"
   }
 }
+
