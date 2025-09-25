@@ -1,18 +1,28 @@
 import { APIGatewayProxyHandler } from 'aws-lambda';
-import { Client } from 'pg';
+import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
 
-export const handler: APIGatewayProxyHandler = async (event) => {
-  const client = new Client();
-  await client.connect();
+const client = new DynamoDBClient({});
 
-  const body = JSON.parse(event.body || '{}');
-  const { id, name } = body;
+export const handler: APIGatewayProxyHandler = async () => {
+  try {
+    const command = new ScanCommand({ TableName: process.env.DDB_TABLE });
+    const data = await client.send(command);
 
-  await client.query('INSERT INTO users (id, name) VALUES ($1, $2)', [id, name]);
-  await client.end();
-
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ message: 'User inserted into PostgreSQL' }),
-  };
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        alerts: data.Items?.map(item => ({
+          userId: item.userId.S,
+          name: item.name.S,
+          stress_level: item.stress_level.N,
+          alert: item.alert.BOOL,
+        }))
+      }),
+    };
+  } catch (err) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: (err as Error).message }),
+    };
+  }
 };
