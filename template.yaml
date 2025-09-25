@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
   Student Stress Detector - Serverless ML-powered system to flag high-stress students
@@ -10,7 +10,6 @@ Globals:
     MemorySize: 256
 
 Resources:
-
   ## DynamoDB Table
   UserTable:
     Type: AWS::DynamoDB::Table
