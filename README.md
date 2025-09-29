@@ -1,7 +1,6 @@
 Student Stress Detector 🚀
 
 A serverless ML-powered system for detecting high-stress students from IoT mental health data.
-This repository contains the solution for **Challenge 2: ML Agentic Engineer** for the Founding Engineer position.
 The system ingests IoT mental health data, detects students with stress above a threshold, stores alerts in DynamoDB, and exposes them through an API Gateway.
 
 ---
